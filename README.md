@@ -1,3 +1,13 @@
+Few Git practices: 
+1. All the development will be in feature specific branches 
+2. PR request needs to be raised 
+3. Using Git issues for various tasks and referring commits to each issue
+4. First we will focus on setting up the complete pipeline in dev/pipeline branch 
+ - [ ] Data Lodader 
+ - [ ] Model training file 
+
+
+
 # Allosaurus
 Allosaurus is a pretrained universal phone recognizer. 
 
