@@ -1,9 +1,9 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-from dataloader import AllosaurusSpeechDataset
+# from dataloader import AllosaurusSpeechDataset
 from torch.utils.data import DataLoader
-import torc
+import torch
 import pickle
 import torch.nn as nn
 import numpy as np
@@ -12,7 +12,8 @@ import os
 import json
 import random
 torch.backends.cudnn.benchmark = True
-
+import torchaudio
+import trainer
 
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
@@ -25,13 +26,18 @@ def str2None(v):
 def build_dataset_providers(opts):
 
     # Build Dataset(s) and DataLoader(s)
-    dataset = getattr(pase.dataset, opts.dataset[idx])
-    print ('Dataset name {} and opts {}'.format(dataset, opts.dataset[idx]))
+    # dataset = getattr(pase.dataset, opts.dataset[idx])
+    # print ('Dataset name {} and opts {}'.format(dataset, opts.dataset[idx]))
     
-    train_set = AllosaurusSpeechDataset(opts.data_root, 'train')
-    va_dset = AllosaurusSpeechDataset(opts.data_root,'valid')
-
-    return train_set, val_set
+    # train_set = AllosaurusSpeechDataset(opts.data_root, 'train')
+    # val_set = AllosaurusSpeechDataset(opts.data_root,'valid')
+    yesno_data = torchaudio.datasets.YESNO('.', download=True)
+    data_loader = torch.utils.data.DataLoader(yesno_data,
+                                          batch_size=1,
+                                          shuffle=True,
+                                          num_workers=2)
+    return data_loader,data_loader
+    # return train_set, val_set
 
 def train(opts):
     CUDA = True if torch.cuda.is_available() and not opts.no_cuda else False
@@ -51,27 +57,29 @@ def train(opts):
     #Get dataset provider
     train_set, val_set = build_dataset_providers(opts)
 
-    dloader = DataLoader(train_set, batch_size=opts.batch_size,
-                         shuffle=True,
-                         num_workers=opts.num_workers,
-                         drop_last=True,
-                         pin_memory=CUDA)
-    # Compute estimation of batches per epoch (bpe). 
+    # dloader = DataLoader(train_set, batch_size=opts.batch_size,
+    #                      shuffle=True,
+    #                      num_workers=opts.num_workers,
+    #                      drop_last=True,
+    #                      pin_memory=CUDA)
+    # testing with deafult dataloade
+   
+    # # Compute estimation of batches per epoch (bpe). 
     bpe = train_set.len // opts.batch_size
     opts.bpe = bpe
-    if opts.do_eval:
-        assert va_dset is not None, (
-            "Asked to do validation, but failed to build validation set"
-        )
-        va_dloader = DataLoader(va_dset, batch_size=opts.batch_size,
-                                shuffle=True,
-                                num_workers=opts.num_workers,
-                                drop_last=True,
-                                pin_memory=CUDA)
-        va_bpe = val_set.len // opts.batch_size
-        opts.va_bpe = va_bpe
-    else:
-        va_dloader = None
+    # if opts.do_eval:
+    #     assert val_set is not None, (
+    #         "Asked to do validation, but failed to build validation set"
+    #     )
+    #     va_dloader = DataLoader(val_set, batch_size=opts.batch_size,
+    #                             shuffle=True,
+    #                             num_workers=opts.num_workers,
+    #                             drop_last=True,
+    #                             pin_memory=CUDA)
+    #     va_bpe = val_set.len // opts.batch_size
+    #     opts.va_bpe = va_bpe
+    # else:
+    #     va_dloader = None
 
     # ---------------------
     # Build Model
@@ -106,8 +114,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     #Dataset specific configuration
-    parser.add_argument('--data_root', type='str', default=None)
-    parser.add_argument('--data_cfg', type='str', default=None) 
+    parser.add_argument('--data_root', type=str, default=None)
+    parser.add_argument('--data_cfg', type=str, default=None) 
     parser.add_argument('--dataset', type=str, default='AllosaurusSpeechDataset')
 
     #model configuration TODO: Derive from allosaurus code.
@@ -141,7 +149,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--lr_mode', type=str, default='step', help='learning rate scheduler mode')
 
-     parser.add_argument('--tensorboard', type=str, default='True', help='use tensorboard for logging')
+    parser.add_argument('--tensorboard', type=str, default='True', help='use tensorboard for logging')
+    parser.add_argument('--no_continue', type=str, default='True', help='use tensorboard for logging')
+    parser.add_argument('--backprop_mode', type=str, default='base',help='backprop policy can be choose from: [base, select_one, select_half]')
 
     opts = parser.parse_args()
     # enforce evaluation for now, no option to disable

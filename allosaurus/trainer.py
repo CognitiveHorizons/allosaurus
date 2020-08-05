@@ -1,10 +1,6 @@
-from ..Minions.minions import *
-from ..Minions.cls_minions import *
-from .encoder import encoder
-from .lr_scheduler import LR_Scheduler
-from ..pase import pase, pase_attention, pase_chunking
-from .worker_scheduler import backprop_scheduler
-from ...utils import AuxiliarSuperviser, get_grad_norms
+
+from lr_scheduler import LR_Scheduler
+# from ...utils import AuxiliarSuperviser, get_grad_norms
 import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
@@ -14,6 +10,8 @@ import random
 import os
 import pickle
 from tqdm import tqdm, trange
+from am.allosaurus_torch import AllosaurusTorchModel
+
 try:
     from tensorboardX import SummaryWriter
     use_tb = True
@@ -50,7 +48,7 @@ class trainer(object):
                  device=None):
 
 
-        self.model = AllosaurusTorchModel(model_config)
+        self.model = AllosaurusTorchModel(am_config) # currently removed model_config 
 
         # initialize parameter
         self.epoch = cfg['epoch']
@@ -60,7 +58,7 @@ class trainer(object):
         self.bpe = cfg['bpe']
         self.va_bpe = cfg['va_bpe']
         self.savers = []
-        self.model_cfg = model_cfg
+        # self.model_cfg = model_cfg
         self.cfg = cfg
 
         self.model_optim = getattr(optim, cfg['opt'])(self.model.parameters(), lr=cfg['lr'])

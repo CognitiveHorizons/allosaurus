@@ -4,6 +4,7 @@ from allosaurus.download import download_model
 import argparse
 from pathlib import Path
 
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser('Allosaurus phone recognizer')
