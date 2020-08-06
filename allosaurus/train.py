@@ -13,7 +13,7 @@ import json
 import random
 torch.backends.cudnn.benchmark = True
 import torchaudio
-import trainer
+from trainer import trainer
 
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
@@ -57,29 +57,29 @@ def train(opts):
     #Get dataset provider
     train_set, val_set = build_dataset_providers(opts)
 
-    # dloader = DataLoader(train_set, batch_size=opts.batch_size,
-    #                      shuffle=True,
-    #                      num_workers=opts.num_workers,
-    #                      drop_last=True,
-    #                      pin_memory=CUDA)
+    dloader = DataLoader(train_set, batch_size=opts.batch_size,
+                         shuffle=True,
+                         num_workers=opts.num_workers,
+                         drop_last=True,
+                         pin_memory=CUDA)
     # testing with deafult dataloade
    
     # # Compute estimation of batches per epoch (bpe). 
-    bpe = train_set.len // opts.batch_size
-    opts.bpe = bpe
-    # if opts.do_eval:
-    #     assert val_set is not None, (
-    #         "Asked to do validation, but failed to build validation set"
-    #     )
-    #     va_dloader = DataLoader(val_set, batch_size=opts.batch_size,
-    #                             shuffle=True,
-    #                             num_workers=opts.num_workers,
-    #                             drop_last=True,
-    #                             pin_memory=CUDA)
-    #     va_bpe = val_set.len // opts.batch_size
-    #     opts.va_bpe = va_bpe
-    # else:
-    #     va_dloader = None
+    # bpe = train_set.len // opts.batch_size
+    # opts.bpe = bpe
+    if opts.do_eval:
+        assert val_set is not None, (
+            "Asked to do validation, but failed to build validation set"
+        )
+        va_dloader = DataLoader(val_set, batch_size=opts.batch_size,
+                                shuffle=True,
+                                num_workers=opts.num_workers,
+                                drop_last=True,
+                                pin_memory=CUDA)
+        # va_bpe = val_set.len // opts.batch_size
+        # opts.va_bpe = va_bpe
+    else:
+        va_dloader = None
 
     # ---------------------
     # Build Model
@@ -87,16 +87,21 @@ def train(opts):
 
     #Borrow code from recognize.py
 
-    if opts.model_cfg is not None:
-        with open(opts.model_cfg, 'r') as model_cfg_f:
-            print(model_cfg_f)
-            model_cfg = json.load(model_cfg_f)
-            print(model_cfg)
+    # if opts.model_cfg is not None:
+    #     with open(opts.model_cfg, 'r') as model_cfg_f:
+    #         print(model_cfg_f)
+    #         model_cfg = json.load(model_cfg_f)
+    #         print(model_cfg)
+    # else:
+    #     model_cfg = None
+    if opts.am_config is not None: 
+        am_config=opts.am_config
     else:
-        model_cfg = None
+          am_config=None   
+
 
     print(str2bool(opts.tensorboard))
-    Trainer = trainer(model_cfg=model_cfg,
+    Trainer = trainer(model_cfg=am_config,
                       cfg=vars(opts),
                       backprop_mode=opts.backprop_mode,
                       lr_mode=opts.lr_mode,
@@ -107,7 +112,7 @@ def train(opts):
 
     Trainer.model.to(device)
 
-    Trainer.train_(dloader, device=device, valid_dataloader=va_dloader)
+    Trainer.train_(dloader, device=device, valid_dataloader=val_dloader)
 
 
 if __name__ == '__main__':

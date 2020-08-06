@@ -11,6 +11,8 @@ import os
 import pickle
 from tqdm import tqdm, trange
 from am.allosaurus_torch import AllosaurusTorchModel
+from argparse import Namespace
+import json
 
 try:
     from tensorboardX import SummaryWriter
@@ -47,7 +49,7 @@ class trainer(object):
                  name='Allosaurus',
                  device=None):
 
-
+        am_config = Namespace(**json.load(open(str(cfg['am_config'] / 'am_config.json'))))
         self.model = AllosaurusTorchModel(am_config) # currently removed model_config 
 
         # initialize parameter
